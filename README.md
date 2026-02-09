@@ -7,7 +7,7 @@ A macOS disk usage tracker that shows where your space is going, finds your bigg
 - Scans any directory and shows the biggest subdirectories and files
 - Displays a color-coded disk usage overview (green/yellow/red)
 - Saves every scan so you can see what grew or shrank since last time
-- Lets you ask Claude or Codex questions about your disk usage ("what can I safely delete?")
+- **Ask Claude or Codex** about your disk usage in plain English — no tool permissions needed, it works entirely from pre-collected scan data
 
 ## Install
 
@@ -37,6 +37,47 @@ This will show:
 3. **Largest Files** — biggest individual files with folder and filename separated
 4. **Trends** — what changed since your last scan (appears from the second scan onward)
 
+Example output:
+
+```
+╭──────────────────────────── Disk Overview ─────────────────────────────╮
+│                                                                        │
+│    Volume: Macintosh HD  (apfs)                                        │
+│    Total:  926.4 GB                                                    │
+│    Used:   829.4 GB (89.5%)                                            │
+│    Free:   96.9 GB                                                     │
+│                                                                        │
+│    ███████████████████████████████████░░░░░ 89.5%                      │
+│                                                                        │
+╰────────────────────────────────────────────────────────────────────────╯
+
+                        Top Directories
+┏━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━┓
+┃ Directory              ┃       Size ┃ Bar                    ┃
+┡━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━┩
+│ ~/Library              │   469.5 GB │ ████████████████████   │
+│ ~/Projects             │    46.0 GB │ █                      │
+│ ~/Parallels            │    26.8 GB │ █                      │
+│ ~/Pictures             │    12.0 GB │                        │
+│ ~/Applications         │    11.6 GB │                        │
+│ ~/.npm                 │    11.3 GB │                        │
+│ ~/.nvm                 │    10.2 GB │                        │
+│ ~/Downloads            │     6.0 GB │                        │
+│ ...                    │            │                        │
+└────────────────────────┴────────────┴────────────────────────┘
+
+                        Largest Files
+┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━┳━━━━━━━━━━━━┓
+┃ Path                                  ┃ Type     ┃       Size ┃
+┡━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━╇━━━━━━━━━━━━┩
+│ ~/Library/.../data.img.raw            │ .raw     │     8.0 TB │
+├───────────────────────────────────────┼──────────┼────────────┤
+│ ~/Downloads/Win11_23H2.iso            │ .iso     │     5.2 GB │
+├───────────────────────────────────────┼──────────┼────────────┤
+│ ~/Projects/.../model-00001.safetensors│ .safete… │     4.9 GB │
+└───────────────────────────────────────┴──────────┴────────────┘
+```
+
 ## Commands
 
 ### `dusk scan [PATH]`
@@ -54,7 +95,7 @@ dusk scan --no-history   # Scan without saving to history
 Options:
 | Flag | Description |
 |------|-------------|
-| `-d`, `--depth N` | How many directory levels deep to scan (default: 1) |
+| `-d`, `--depth N` | How many directory levels deep to scan (default: 2) |
 | `-t`, `--top N` | Number of top directories to show (default: 20) |
 | `-f`, `--files N` | Number of largest files to show (default: 10) |
 | `--min-size N` | Minimum file size in MB to include (default: 100) |
@@ -90,14 +131,21 @@ dusk compare ~/Projects  # Compare last two scans of ~/Projects
 
 ### `dusk ask "QUESTION"`
 
-Send your latest scan report to Claude (or Codex) and ask a question about it. Claude has web search enabled, so it can look up what unfamiliar apps or files are.
+Ask Claude (or Codex) about your disk usage in plain English. The LLM receives your pre-collected scan data and answers based on that — it never runs shell commands or asks for permissions. Claude also has web search enabled so it can look up what unfamiliar apps or file types are.
 
 ```bash
 dusk ask "what can I safely delete?"
 dusk ask "why is ~/Library so big?"
-dusk ask "what is this .raw file taking 8TB?"
+dusk ask "anything in Projects I can clean up?"
 dusk ask --scan-id 3 "summarize this scan"
 dusk ask --codex "suggest cleanup commands"
+```
+
+For best results, scan with depth 2+ before asking so the report includes subdirectory detail:
+
+```bash
+dusk scan ~/Projects -d3    # deeper scan for more detail
+dusk ask "what's taking space in Projects?"
 ```
 
 Options:
