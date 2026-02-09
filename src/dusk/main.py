@@ -39,7 +39,7 @@ def main(ctx: click.Context) -> None:
 
 @main.command("scan")
 @click.argument("path", default="~")
-@click.option("--depth", "-d", default=1, help="Directory depth for scanning.")
+@click.option("--depth", "-d", default=2, help="Directory depth for scanning.")
 @click.option("--top", "-t", default=20, help="Number of top directories to show.")
 @click.option("--files", "-f", default=10, help="Number of large files to show.")
 @click.option("--min-size", default=100, help="Minimum file size in MB for large files.")
@@ -191,7 +191,14 @@ def ask_cmd(query: str, scan_id: int | None, codex: bool) -> None:
         result = scans[0]
 
     scan_text = display.format_scan_text(result)
-    prompt = f"Here is a macOS disk usage report:\n\n{scan_text}"
+    prompt = (
+        "You are a disk usage advisor. Answer ONLY based on the disk usage report "
+        "provided below. Do NOT suggest running shell commands and do NOT ask for "
+        "permission to execute commands. If the report lacks detail about a specific "
+        "directory, recommend the user run a deeper scan, e.g. "
+        "`dusk scan <path> -d2` or `dusk scan <path> -d3`.\n\n"
+        f"{scan_text}"
+    )
 
     # Auto-include Docker data when available
     if docker.is_docker_available():
